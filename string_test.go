@@ -191,38 +191,113 @@ func TestStringValueOrZero(t *testing.T) {
 	}
 }
 
+type XmlNodeTest interface {
+	Marshal() string
+}
+
 type NodeTest struct {
-	XMLName xml.Name `xml:"NodeTest"`
-	Test    String   `xml:"test"`
+	Test String `xml:"test"`
+}
+
+func (n NodeTest) Marshal() string {
+	data, err := xml.Marshal(n)
+	maybePanic(err)
+	return string(data)
 }
 
 type AttrTest struct {
-	XMLName xml.Name `xml:"AttrTest"`
-	Test    String   `xml:"test,attr"`
+	Test String `xml:"test,attr"`
 }
 
+func (a AttrTest) Marshal() string {
+	data, err := xml.Marshal(a)
+	maybePanic(err)
+	return string(data)
+}
+
+type StrTest struct {
+	Expected string
+	Struct   XmlNodeTest
+}
+
+type AttrNullTest struct {
+	Test String `xml:"test,attr,omitempty"`
+}
+
+func (a AttrNullTest) Marshal() string {
+	data, err := xml.Marshal(a)
+	maybePanic(err)
+	return string(data)
+}
+
+type AttributesTest struct {
+	Test1 String `xml:"test1,attr,omitempty"`
+	Test2 String `xml:"test2,attr,omitempty"`
+	Test3 String `xml:"test3,attr,omitempty"`
+}
+
+type NodesTest struct {
+	Test1 String `xml:"test1,omitempty"`
+	Test2 String `xml:"test2,omitempty"`
+}
+
+func (n NodesTest) Marshal() string {
+	data, err := xml.Marshal(n)
+	maybePanic(err)
+	return string(data)
+}
+
+func (a AttributesTest) Marshal() string {
+	data, err := xml.Marshal(a)
+	maybePanic(err)
+	return string(data)
+}
+
+var data = []StrTest{{
+	Expected: "<NodeTest><test>123</test></NodeTest>",
+	Struct: NodeTest{
+		Test: NewString("123", true),
+	},
+}, {
+	Expected: `<AttrTest test="123"></AttrTest>`,
+	Struct: AttrTest{
+		Test: NewString("123", true),
+	},
+}, {
+	Expected: `<AttrNullTest></AttrNullTest>`,
+	Struct:   AttrNullTest{Test: NewString("", false)},
+}, {
+	Expected: `<AttributesTest test1="1" test2="2"></AttributesTest>`,
+	Struct: AttributesTest{
+		Test1: NewString("1", true),
+		Test2: NewString("2", true),
+	},
+}, {
+	Expected: `<AttributesTest test1="1"></AttributesTest>`,
+	Struct: AttributesTest{
+		Test1: NewString("1", true),
+		Test2: NewString("", false),
+	},
+}, {
+	Expected: `<NodesTest><test1>1</test1></NodesTest>`,
+	Struct: NodesTest{
+		Test1: NewString("1", true),
+		Test2: NewString("", false),
+	},
+}, {
+	Expected: `<NodesTest></NodesTest>`,
+	Struct: NodesTest{
+		Test1: NewString("123", false),
+	},
+}}
+
 func TestMarshalXML(t *testing.T) {
-	a := NodeTest{xml.Name{
-		Space: "",
-		Local: "NodeTest",
-	}, NewString("123", true)}
-	ae := "<NodeTest><test>123</test></NodeTest>"
-	b := AttrTest{XMLName: xml.Name{
-		Space: "",
-		Local: "AttrTest",
-	}, Test: NewString("123", true)}
-	be := `<AttrTest test="123"></AttrTest>`
-
-	aa, err := xml.Marshal(a)
-	maybePanic(err)
-	if string(aa) != ae {
-		t.Errorf(`got %s want %s`, aa, ae)
-	}
-
-	ba, err := xml.Marshal(b)
-	maybePanic(err)
-	if string(ba) != be {
-		t.Errorf(`got %s want %s`, ba, be)
+	for _, s := range data {
+		t.Run(s.Expected, func(t *testing.T) {
+			if s.Expected != s.Struct.Marshal() {
+				t.Errorf(`got %s want %s`, s.Struct.Marshal(), s.Expected)
+			}
+		})
 	}
 }
 

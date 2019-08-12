@@ -7,6 +7,7 @@ package null
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"reflect"
 )
@@ -117,16 +118,16 @@ func (s String) IsZero() bool {
 	return !s.Valid
 }
 
-func (ns String) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
-	if ns.Valid {
-		return xml.Attr{Name: name, Value: ns.String}, nil
+func (s String) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	if s.Valid {
+		return xml.Attr{Name: name, Value: s.String}, nil
 	}
 	return xml.Attr{}, nil
 }
 
-func (ns String) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	if ns.Valid {
-		return e.EncodeElement(ns.String, start)
+func (s String) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if s.Valid {
+		return e.EncodeElement(s.String, start)
 	}
 	return nil
 }
