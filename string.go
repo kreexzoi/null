@@ -116,3 +116,17 @@ func (s String) Ptr() *string {
 func (s String) IsZero() bool {
 	return !s.Valid
 }
+
+func (ns String) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	if ns.Valid {
+		return xml.Attr{Name: name, Value: ns.String}, nil
+	}
+	return xml.Attr{}, nil
+}
+
+func (ns String) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if ns.Valid {
+		return e.EncodeElement(ns.String, start)
+	}
+	return nil
+}

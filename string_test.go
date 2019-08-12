@@ -2,6 +2,7 @@ package null
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"testing"
 )
 
@@ -187,6 +188,41 @@ func TestStringValueOrZero(t *testing.T) {
 	invalid := NewString("test", false)
 	if invalid.ValueOrZero() != "" {
 		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
+}
+
+type NodeTest struct {
+	XMLName xml.Name `xml:"NodeTest"`
+	Test    String   `xml:"test"`
+}
+
+type AttrTest struct {
+	XMLName xml.Name `xml:"AttrTest"`
+	Test    String   `xml:"test,attr"`
+}
+
+func TestMarshalXML(t *testing.T) {
+	a := NodeTest{xml.Name{
+		Space: "",
+		Local: "NodeTest",
+	}, NewString("123", true)}
+	ae := "<NodeTest><test>123</test></NodeTest>"
+	b := AttrTest{XMLName: xml.Name{
+		Space: "",
+		Local: "AttrTest",
+	}, Test: NewString("123", true)}
+	be := `<AttrTest test="123"></AttrTest>`
+
+	aa, err := xml.Marshal(a)
+	maybePanic(err)
+	if string(aa) != ae {
+		t.Errorf(`got %s want %s`, aa, ae)
+	}
+
+	ba, err := xml.Marshal(b)
+	maybePanic(err)
+	if string(ba) != be {
+		t.Errorf(`got %s want %s`, ba, be)
 	}
 }
 
